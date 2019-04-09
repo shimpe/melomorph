@@ -1,0 +1,11 @@
+(
+  name: "MeloMorph",
+  summary: "deconstruct, morph and reconstruct melodies",
+  version: "1.0",
+  schelp: "MeloMorph.schelp",
+  dependencies: [['']],
+  license: "GNU GPL v3.0",
+  copyright: "stefaan himpe",
+  ext_dependency: "",
+  url: "https://github.com/shimpe/melomorph"
+)
