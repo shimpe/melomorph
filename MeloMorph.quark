@@ -3,7 +3,7 @@
   summary: "deconstruct, morph and reconstruct melodies",
   version: "1.0",
   schelp: "MeloMorph.schelp",
-  dependencies: [['']],
+  dependencies: [['https://github.com/shimpe/panola']],
   license: "GNU GPL v3.0",
   copyright: "stefaan himpe",
   ext_dependency: "",
