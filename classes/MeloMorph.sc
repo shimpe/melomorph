@@ -18,22 +18,13 @@ MeloMorph {
         } /* else */ {
             this.panola_melody = Panola.new(mel);
         };
-        this.iterations = iter;
         this.plan_initialized = false;
-	}
+    }
 
     set_melody {
         | melody |
         if (this.panola_melody != melody) {
             this.panola_melody = melody;
-            this.plan_initialized = false;
-        };
-    }
-
-    set_iterations {
-        | iter |
-        if (iter != this.iterations) {
-            this.iterations = iter;
             this.plan_initialized = false;
         };
     }
@@ -44,9 +35,9 @@ MeloMorph {
 
         if (this.plan_initialized.not) { Error("Cannot shuffle if you haven't created an iteration plan yet! Call create_iteration_plan first."); };
         if (step >= this.iteration_plan.size) { Error("Step must be < iteration plan size."); };
-        if (this.decorated_notes.size == 0) { Error("Notes not decorated yet! Call decorate_notes first!")};
+        if (this.decorated_notes.size == 0) { Error("Notes not decorated yet! Call decorate_notes first!"); };
 
-        step.debug("shuffle step");
+        //step.debug("shuffle step");
 
         no_iterations = this.iteration_plan[step];
         no_iterations.do({
@@ -56,6 +47,36 @@ MeloMorph {
             this.decorated_notes.swap(first_random_index, second_random_index);
             //this.decorated_notes.postln;
         });
+    }
+
+    bubblesort {
+        | step |
+        var no_of_iterations;
+        if (this.plan_initialized.not) { Error("Cannot sort if you haven't created an iteration plan yet! Call create_iteration_plan first."); };
+        if (step >= this.iteration_plan.size) { Error("Step must be < iteration plan size."); };
+        if (this.decorated_notes.size == 0) { Error("Notes not decorated yet! Call decorate_notes first!"); };
+
+        no_of_iterations = this.iteration_plan[step];
+
+        if (step == (no_of_iterations.size - 1)) {
+            this.decorated_notes.sort({|el1, el2| el2[0] > el1[0] });
+        } /* else */ {
+            var no_of_iterations = this.iteration_plan[step];
+            var length = this.decorated_notes.size;
+            no_of_iterations.do({
+                | it |
+                this.decorated_notes.size.collect({
+                    | idx |
+                    var prev_el = this.decorated_notes[idx-1];
+                    var el = this.decorated_notes[idx];
+                    if (idx>0) {
+                        if (prev_el[0] > el[0]) {
+                            this.decorated_notes.swap(idx-1, idx);
+                        };
+                    };
+                });
+            });
+        };
     }
 
     //--

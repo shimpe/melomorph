@@ -28,6 +28,37 @@ MeloMorphTest1 : UnitTest {
             this.assertEquals(condition, true);
         });
     }
+
+    test_sort {
+        100.do({
+            var m = MeloMorph.new("a b c");
+            var condition;
+            m.create_iteration_plan(2);
+            m.decorate_notes();
+            m.shuffle(0);
+            m.shuffle(1);
+            //m.decorated_notes.debug("after shuffle");
+            m.bubblesort(0);
+            //m.decorated_notes.debug("after bubblesort");
+            condition = (m.decorated_notes == [ [ 0, [ 69, 0.25, 0.5 ] ], [ 1, [ 71, 0.25, 0.5 ] ], [ 2, [ 60, 0.25, 0.5 ] ] ]) ||
+            (m.decorated_notes == [ [ 1, [ 71, 0.25, 0.5 ] ], [ 0, [ 69, 0.25, 0.5 ] ], [ 2, [ 60, 0.25, 0.5 ] ] ] );
+            this.assertEquals(condition, true);
+        });
+        100.do({
+            var m = MeloMorph.new("a b c");
+            var condition;
+            m.create_iteration_plan(2);
+            m.decorate_notes();
+            m.shuffle(0);
+            m.shuffle(1);
+            //m.decorated_notes.debug("after shuffle");
+            m.bubblesort(0);
+            m.bubblesort(1);
+            //m.decorated_notes.debug("after bubblesort");
+            condition = (m.decorated_notes == [ [ 0, [ 69, 0.25, 0.5 ] ], [ 1, [ 71, 0.25, 0.5 ] ], [ 2, [ 60, 0.25, 0.5 ] ] ]);
+            this.assertEquals(condition, true);
+        });
+    }
 }
 
 
