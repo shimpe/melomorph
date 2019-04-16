@@ -1,9 +1,9 @@
 MeloMorphTest1 : UnitTest {
-	test_check_iteration_plan {
+    test_check_iteration_plan {
         var m = MeloMorph.new("(a b c d e f)*50 ");
         m.create_iteration_plan(\source, 5);
         this.assertEquals(m.iteration_plan[\source], [ 1, 4, 17, 72, 299] );
-	}
+    }
 
     test_check_decorate_notes {
         var m = MeloMorph.new("a b_8 c5_16*2/4");
@@ -13,7 +13,7 @@ MeloMorphTest1 : UnitTest {
     }
 
     test_shuffle {
-        100.do({
+        10.do({
             var m = MeloMorph.new("a b c");
             var condition;
             m.create_iteration_plan(\source, 2);
@@ -28,7 +28,7 @@ MeloMorphTest1 : UnitTest {
     }
 
     test_sort {
-        100.do({
+        10.do({
             var m = MeloMorph.new("a b c");
             var condition;
             m.create_iteration_plan(\source, 2);
@@ -40,7 +40,7 @@ MeloMorphTest1 : UnitTest {
             (m.decorated_notes[\source] == [ [ 1, [ 71, 0.25, 0.5 ] ], [ 0, [ 69, 0.25, 0.5 ] ], [ 2, [ 60, 0.25, 0.5 ] ] ] );
             this.assertEquals(condition, true);
         });
-        100.do({
+        10.do({
             var m = MeloMorph.new("a b c");
             var condition;
             m.create_iteration_plan(\source, 2);
@@ -53,15 +53,47 @@ MeloMorphTest1 : UnitTest {
             this.assertEquals(condition, true);
         });
     }
+
+    test_initsubstitution_equal {
+        var m = MeloMorph.new("a b c", "d e f");
+        m.decorate_notes(\source);
+        m.decorate_notes(\target);
+        m.init_substitutions(\source, \target);
+        this.assertEquals(m.possible_substitutions, ( 'source_to_target' : [ [ 0, 0 ], [ 1, 1 ], [2, 2] ] ));
+    }
+
+    test_initsubstitution_shorter {
+        var m = MeloMorph.new("a b", "d e f");
+        m.decorate_notes(\source);
+        m.decorate_notes(\target);
+        m.init_substitutions(\source, \target);
+        this.assertEquals(m.possible_substitutions, ( 'source_to_target' : [ [ 0, 0 ], [ 1, 1 ] ] ));
+    }
+
+    test_initsubstitution_longer{
+        var m = MeloMorph.new("a b c", "d e");
+        m.decorate_notes(\source);
+        m.decorate_notes(\target);
+        m.init_substitutions(\source, \target);
+        this.assertEquals(m.possible_substitutions, ( 'source_to_target' : [ [ 0, 0 ], [ 1, 1 ], [2, nil] ] ));
+    }
+
+    test_undecorate {
+        var result;
+        var m = MeloMorph.new("a b c");
+        m.decorate_notes(\source);
+        result = m.undecorate_asPbind(\source, \default);
+        this.assertEquals(result.class, Pbind); // todo
+    }
 }
 
 
 MeloMorphTester {
-	*new {
-		^super.new.init();
-	}
+    *new {
+        ^super.new.init();
+    }
 
-	init {
-		MeloMorphTest1.run;
-	}
+    init {
+        MeloMorphTest1.run;
+    }
 }

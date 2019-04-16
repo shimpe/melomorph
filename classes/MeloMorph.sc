@@ -3,6 +3,7 @@ MeloMorph {
     var <>decorated_notes;
     var <>iteration_plan;
     var <>plan_initialized;
+    var <>possible_substitutions;
 
     *new {
         | mel = "", mel2 = ""|
@@ -19,6 +20,7 @@ MeloMorph {
         this.plan_initialized[\target] = false;
         this.iteration_plan = ();
         this.decorated_notes = ();
+        this.possible_substitutions = [];
     }
 
     set_melody {
@@ -82,6 +84,122 @@ MeloMorph {
         };
     }
 
+    substitute {
+        | type, totype, step |
+        var repeats;
+        if (this.plan_initialized[type].not) { Error("Cannot sort if you haven't created an iteration plan yet! Call create_iteration_plan for type"++type++"first."); };
+        if (step >= this.iteration_plan[type].size) { Error("Step must be < iteration plan size for type"++type); };
+        if (this.decorated_notes[type].size == 0) { Error("Notes in"++type++" not decorated yet! Call decorate_notes first!"); };
+        if (this.decorated_notes[totype].size==0) { Error("Notes in"++totype++" not decorated yet! Call decorate_notes first!");};
+
+        if (step == (this.iteration_plan.size-1)) {
+            /*final step: complete all the work */
+            this.possible_substitutions.do({
+                |subst|
+                var operation = subst[0]; // one of \append, \remove, \replace
+                var whichnote = subst[1];
+                if (operation == \append) {
+                    this.decorated_notes[totype] = this.decorated_notes[totype].add(this.decorated_note[type][whichnote]);
+                };
+                if (operation == \remove) {
+                    var filtered_list = [];
+                    this.decorated_notes[totype].do({ |note|
+                        if (note[0] == whichnote) {
+                            // skip
+                        } /* else */ {
+                            filtered_list = filtered_list.add(note);
+                        };
+                    });
+                    this.decorated_notes[totype] = filtered_list;
+                };
+                if (operation == \replace) {
+                    var filtered_list = [];
+                    var sought_note = nil;
+                    this.decorated_notes[type].do({
+                        | froms |
+                        if (froms[0] == whichnote) {
+                            sought_note = froms;
+                        };
+                    });
+                    this.decorated_notes[totype].do({ |note|
+                        if (note[0] == whichnote) {
+                            filtered_list = filtered_list.add(sought_note);
+                        } {
+                            filtered_list = filtered_list.add(note);
+                        };
+                    });
+                    this.decorated_notes[totype] = filtered_list;
+                };
+            });
+        } /* else */ {
+            repeats = this.iteration_plan[type].size;
+            repeats.do({
+                var subst = this.possible_substitutions.pop();
+                if (subst.notNil) {
+                    var operation = subst[0]; // one of \append, \remove, \replace
+                    var whichnote = subst[1];
+                    if (operation == \append) {
+                        this.decorated_notes[totype] = this.decorated_notes[totype].add(this.decorated_note[type][whichnote]);
+                    };
+                    if (operation == \remove) {
+                        var filtered_list = [];
+                        this.decorated_notes[totype].do({ |note|
+                            if (note[0] == whichnote) {
+                                // skip
+                            } /* else */ {
+                                filtered_list = filtered_list.add(note);
+                            };
+                        });
+                        this.decorated_notes[totype] = filtered_list;
+                    };
+                    if (operation == \replace) {
+                        var filtered_list = [];
+                        var sought_note = nil;
+                        this.decorated_notes[type].do({
+                            | froms |
+                            if (froms[0] == whichnote) {
+                                sought_note = froms;
+                            };
+                        });
+                        this.decorated_notes[totype].do({ |note|
+                            if (note[0] == whichnote) {
+                                filtered_list = filtered_list.add(sought_note);
+                            } {
+                                filtered_list = filtered_list.add(note);
+                            };
+                        });
+                        this.decorated_notes[totype] = filtered_list;
+                    };
+                };
+            });
+        };
+    }
+
+    init_substitutions {
+        | fromtype, totype |
+        var size_from = this.decorated_notes[fromtype].size;
+        var size_to = this.decorated_notes[totype].size;
+        if (size_from < size_to) {
+            (size_to - size_from).do({
+                |idx|
+                var extra_note = idx + size_from;
+                this.possible_substitutions = this.possible_substitutions.add([\append, extra_note]);
+            });
+        } /* else */ {
+            (size_from - size_to).do({
+                |idx|
+                var superfluous_note = idx+size_to;
+                this.possible_substitutions = this.possible_substitutions.add([\remove, superfluous_note]);
+            });
+        };
+        size_to.min(size_from).do({
+            |idx|
+            this.possible_substitutions = this.possible_substitutions.add([\replace, idx]);
+        });
+
+        this.possible_substitutions = this.possible_substitutions.scramble;
+    }
+
     //--
     create_iteration_plan {
         | type, no_of_iterations = 5 |
@@ -100,5 +218,15 @@ MeloMorph {
         dur = this.panola_melody[type].durationPattern.asStream.all;
         vol = this.panola_melody[type].volumePattern.asStream.all;
         this.decorated_notes[type] = [note, dur, vol].lace.clump(3).collect({ |el,idx| [idx, el]; });
+    }
+
+    undecorate_asPbind {
+        |type, instrument|
+        ^Pbind(
+            \instrument, instrument,
+            \midinote, Pseq(this.decorated_notes[type].collect({|el| el[1][0]; })),
+            \dur, Pseq(this.decorated_notes[type].collect({|el| el[1][1]; })),
+            \amp, Pseq(this.decorated_notes[type].collect({|el| el[1][2]; })),
+        )
     }
 }
